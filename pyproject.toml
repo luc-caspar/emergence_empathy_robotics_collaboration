@@ -1,0 +1,9 @@
+[project]
+name = "eerc"
+version = "0.1.0"
+requires-python = ">=3.13"
+description = "EERC stands for Emergence of Empathy in Robotics Collaboration. This is a research project to explore the posibility of emerging empathy by providing collaborative robots with the 'right' kind of signal."
+dependencies = [
+    "pyglet>=2.1.13",
+    "pymunk>=7.2.0",
+]
