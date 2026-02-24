@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser
-from time import sleep
 import pymunk as pm
 import pyglet as pg
 from multiprocessing import Process, Event, Queue
@@ -27,18 +26,21 @@ class Display(Process):
         super().__init__()
 
         self._win = None  # This is necessary otherwise the openGL environment is not correctly initialized
+        self._batch = None
+        self._shapes = {}  # Keep track of existing objects, keyed by their ID
+        self._groups = None 
         self._q = q
         self._evt = evt
 
     def on_close(self):
         # Let the main thread now that the window closed
-        self._evt.set()
-        # Propagate the standard closing process
-        return self._win.on_close()
+        if not self._evt.is_set():
+            self._evt.set()
+            # Propagate the standard closing process
+            return self._win.on_close()
 
     def on_draw(self):
         if not self._win.has_exit:
-            batch = pg.graphics.Batch()
             # Get the data to display next
             try:
                 data = self._q.get(timeout=1)
@@ -50,25 +52,50 @@ class Display(Process):
             # Clear the window
             self._win.clear()
 
-            # TODO: Update display according to content of `data`
+            # Update display according to content of `data`
+            curr_ids = set()
             for obj in data:
+                curr_ids.add(obj[1])
                 if obj[0] == 'Circle':
-                    g = pg.shapes.Circle(obj[2], obj[3], radius=obj[4], color=(255, 0, 0), batch=batch)
-            batch.draw()
+                    try:
+                        # Modify the position of existing shape
+                        self._shapes[obj[1]].x = obj[3]
+                        self._shapes[obj[1]].y = obj[4]
+                    except KeyError:
+                        # Otherwise create new shape in the right location
+                        self._shapes[obj[1]] = pg.shapes.Circle(obj[3], obj[4], radius=obj[5], color=(255, 0, 0), batch=self._batch, group=self._groups[obj[2]])
 
+            # Remove non-existent shapes from storage
+            # TODO: This might be un-necessary, and slowing us down. Therefore, you might want to remove it.
+            for k in set(self._shapes.keys()).difference(curr_ids):
+                print(k)
+                del self._shapes[k]
 
-    def run(self):
+            # Draw everything, everywhere, and all at once
+            self._batch.draw()
+
+    def init(self):
         # Initialize the window
         self._win = pg.window.Window()
         # Let the window know how to draw things
         self._win.push_handlers(on_draw=self.on_draw, on_close=self.on_close)
 
-#        try:
+        # Initialize a batch
+        self._batch = pg.graphics.Batch()
+
+        # Initialize the groups
+        self._groups = {k: pg.graphics.Group() for k in [pm.Body.DYNAMIC, pm.Body.KINEMATIC, pm.Body.STATIC]}
+
+    def run(self):
+        # Initialize the display and its context
+        self.init()
+
+        try:
             # Run the loop forever
-        pg.app.run(interval=1/FPS)
-#        except RuntimeError:
-#            if not self._evt.is_set():
-#                self._evt.set()
+            pg.app.run(interval=1/FPS)
+        except RuntimeError:
+            if not self._evt.is_set():
+                self._evt.set()
 
 
 if __name__ == "__main__":
@@ -110,13 +137,13 @@ if __name__ == "__main__":
         while bdy.position.y - ball.radius > 0:  # /!\ Do not stop the simulation if the display closes
             env.step(1 / FPS)
 
-            # Do not queue data if the display thread does not exist
+            # Do not queue data if the display does not exist
             if not (args.headless or end_evt.is_set()):
                 # Send only the shapes to the display thread
                 shapes = []
                 for shape in env.shapes:
-                    if type(shape) == pm.shapes.Circle:
-                        shapes.append(('Circle', shape.body.id, shape.body.position.x, shape.body.position.y, shape.radius))
+                    if type(shape) is pm.shapes.Circle:
+                        shapes.append(('Circle', shape.body.id, shape.body.body_type, shape.body.position.x, shape.body.position.y, shape.radius))
                 q.put(list(shapes))
 
     finally:
