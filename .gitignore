@@ -5,6 +5,7 @@ uv.lock
 __pycache__/
 *.py[codz]
 *$py.class
+*.json
 
 # C extensions
 *.so
