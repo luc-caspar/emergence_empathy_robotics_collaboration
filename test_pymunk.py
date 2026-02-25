@@ -40,6 +40,8 @@ class Display(Process):
             return self._win.on_close()
 
     def on_draw(self):
+        # TODO: Split that into an init_display() and on_draw() function
+        # TODO: init_display() creates all the objects
         if not self._win.has_exit:
             # Get the data to display next
             try:
@@ -62,8 +64,30 @@ class Display(Process):
                         self._shapes[obj[1]].x = obj[3]
                         self._shapes[obj[1]].y = obj[4]
                     except KeyError:
+                        print('New Circle')
                         # Otherwise create new shape in the right location
-                        self._shapes[obj[1]] = pg.shapes.Circle(obj[3], obj[4], radius=obj[5], color=(255, 0, 0), batch=self._batch, group=self._groups[obj[2]])
+                        self._shapes[obj[1]] = pg.shapes.Circle(obj[3],
+                                                                obj[4],
+                                                                radius=obj[5],
+                                                                color=(255, 0, 0),
+                                                                batch=self._batch,
+                                                                group=self._groups[obj[2]])
+                elif obj[0] == 'Segment':
+                    try:
+                        # Modify the position of existing shape
+                        self._shapes[obj[1]].x = obj[3][0]
+                        self._shapes[obj[1]].y = obj[3][1]
+                        self._shapes[obj[1]].x2 = obj[4][0]
+                        self._shapes[obj[1]].y2 = obj[4][1]
+                    except KeyError:
+                        print('New Segment')
+                        # Otherwise create new shape in the right location
+                        self._shapes[obj[1]] = pg.shapes.Line(obj[3][0], obj[3][1],
+                                                              obj[4][0], obj[4][1],
+                                                              thickness=obj[5],
+                                                              color=(255, 0, 0),
+                                                              batch=self._batch,
+                                                              group=self._groups[obj[2]])
 
             # Remove non-existent shapes from storage
             # TODO: This might be un-necessary, and slowing us down. Therefore, you might want to remove it.
@@ -83,7 +107,7 @@ class Display(Process):
         # Initialize a batch
         self._batch = pg.graphics.Batch()
 
-        # Initialize the groups
+        # Initialize the groups (this is only for graphics and does not impact grouping in the physics simulation)
         self._groups = {k: pg.graphics.Group() for k in [pm.Body.DYNAMIC, pm.Body.KINEMATIC, pm.Body.STATIC]}
 
     def run(self):
@@ -113,7 +137,7 @@ if __name__ == "__main__":
     env = pm.Space()
     env.gravity = (0, -9.81)
 
-    # But a at altitude in the environment
+    # Put a ball at altitude in the environment
     bdy = pm.Body()
     ball = pm.Circle(body=bdy, radius=10)
     ball.elasticity = 1  # perfect bounce
@@ -123,6 +147,17 @@ if __name__ == "__main__":
     # Add the ball in the environment
     bdy.position = (100, 100)
     env.add(bdy, ball)
+
+    # Put a segment not too far from it
+    bdy = pm.Body()
+    seg = pm.Segment(body=bdy, a=(0, 0), b=(10, 10), radius=5)
+    seg.mass = 5
+    seg.friction = 0
+    seg.elasticity = 1
+
+    # Add the segment to the world
+    bdy.position = (200, 200)
+    env.add(bdy, seg)
 
     # Instantiate display thread to monitor environment state if necessary
     if not args.headless:
@@ -134,16 +169,21 @@ if __name__ == "__main__":
     try:
         # Let the world evolve
         cnt = 0
-        while bdy.position.y - ball.radius > 0:  # /!\ Do not stop the simulation if the display closes
+        while ball.body.position.y - ball.radius > 0:  # /!\ Do not stop the simulation if the display closes
             env.step(1 / FPS)
 
             # Do not queue data if the display does not exist
             if not (args.headless or end_evt.is_set()):
+                # TODO: Split that into an init_env() and step() functions
                 # Send only the shapes to the display thread
                 shapes = []
                 for shape in env.shapes:
                     if type(shape) is pm.shapes.Circle:
                         shapes.append(('Circle', shape.body.id, shape.body.body_type, shape.body.position.x, shape.body.position.y, shape.radius))
+                    elif type(shape) is pm.shapes.Segment:
+                        shapes.append(('Segment', shape.body.id, shape.body.body_type, shape.a, shape.b, shape.radius))
+
+                # Send the data to the display
                 q.put(list(shapes))
 
     finally:
