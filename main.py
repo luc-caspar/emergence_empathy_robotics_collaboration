@@ -36,6 +36,9 @@ if __name__ == "__main__":
             disp_evt = Event()
             display = Display(disp_q, disp_evt, FPS)
             display.start()
+        else:
+            disp_q = None
+            disp_evt = None
 
         try:
             # Instantiate the environment
