@@ -47,6 +47,7 @@ class Display(Process):
                 except KeyError:
                     rotation = 0
                 self._shapes[shape_id] = pg.shapes.Rectangle(**kwargs)
+                self._shapes[shape_id].anchor_position = (kwargs['width'] / 2, kwargs['height'] / 2)
                 self._shapes[shape_id].rotation = rotation
             case _:
                 self._evt.set()
@@ -58,7 +59,6 @@ class Display(Process):
             del self._shapes[shape_id]
         except KeyError:
             print("This should not happen. Let's ignore it.")
-        
 
     def init_display(self):
         # Initialize the window
@@ -68,6 +68,7 @@ class Display(Process):
 
         # Initialize a batch
         self._batch = pg.graphics.Batch()
+
 
     def on_draw(self):
         if not self._win.has_exit:
