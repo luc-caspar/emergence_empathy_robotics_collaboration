@@ -14,96 +14,205 @@ class Environment:
 
         self._id_to_pm_id = {}
         self._objs = {}
-        self._joints = {}
 
         self._fps = fps
 
-    def create_shape(self, shape_type, **kwargs):
+    def _create_segment(self, **kwargs):
+        # Compute the shape's features based on the given data
+        # This is required because pymunk and pyglet do not declare shapes in the same way
+        x = kwargs.get('x', 0) 
+        y = kwargs.get('y', 0)
+        width = kwargs.get('width', 10)
+        height = kwargs.get('height', 10)
+        rotation = kwargs.get('rotation', 0)
+        x1 = x - cos(radians(rotation)) * width / 2
+        x2 = x + cos(radians(rotation)) * width / 2
+        y1 = y - sin(radians(rotation)) * width / 2
+        y2 = y + sin(radians(rotation)) * width / 2
+
+        # Allows for body type to be specified as a constant/string
+        body_type = kwargs.get('body_type', pm.Body.DYNAMIC)
+        if isinstance(body_type, str):
+            body_type = getattr(pm.Body, body_type)
+        # Instantiate the body and shape
+        bdy = pm.Body(body_type=body_type)
+        bdy.position = (x, y)
+        bdy.angle = radians(rotation)
+        bdy.health = kwargs.get('health')  # Allow to define health for agents
+        shape = pm.shapes.Segment(body=bdy, a=(x1, y1), b=(x2, y2), radius=height)
+        shape.mass = kwargs.get('mass', 1) 
+        shape.elasticity = kwargs.get('bounce', 0)  # No bounce
+        shape.friction = kwargs.get('friction', 0)  # Frictionless
+
+        # and add them to the display if relevant
         msg = {}
+        if not (self._headless or self._disp_evt.is_set()):
+            msg = {'cmd': 'create',
+                   'data': {'shape_type': 'Segment',
+                            'shape_id': bdy.id,
+                            'width': width,
+                            'height': height,
+                            'rotation': rotation,
+                            'x': x,
+                            'y': y,
+                            'color': (0, 255, 0)}}
+        return shape, msg
+
+    def _create_circle(self, **kwargs):
+        msg = {}
+        # Allows for body type to be specified as a constant/string
+        body_type = kwargs.get('body_type', pm.Body.DYNAMIC)
+        if isinstance(body_type, str):
+            body_type = getattr(pm.Body, body_type)
+        # Create the required body and shape
+        bdy = pm.Body(body_type=body_type)
+        bdy.position = (kwargs.get('x', 0), kwargs.get('y', 0))
+        bdy.health = kwargs.get('health')
+        shape = pm.shapes.Circle(body=bdy, radius=kwargs.get('radius', 10))
+        shape.mass = kwargs.get('mass', 1) 
+        shape.elasticity = kwargs.get('bounce', 0)  # No bounce
+        shape.friction = kwargs.get('friction', 0)  # Frictionless
+        # and add them to the display if relevant
+        if not (self._headless or self._disp_evt.is_set()):
+            msg = {'cmd': 'create',
+                   'data': {'shape_type': 'Circle',
+                            'shape_id': bdy.id,
+                            'x': bdy.position.x,
+                            'y': bdy.position.y,
+                            'radius': shape.radius,
+                            'color': (255, 0, 0)}}
+        return shape, msg
+
+    def _create_box(self, **kwargs):
+        msg = {}
+        # Extract position and rotation
+        x = kwargs.get('x', 0) 
+        y = kwargs.get('y', 0)
+        rotation = kwargs.get('rotation', 0)
+        # Compute the vertices that make the box based on the width and height
+        width = kwargs.get('width', 10)
+        height = kwargs.get('height', 10)
+        verts = [(-width/2, -height/2), (width/2, -height/2), (width/2, height/2), (-width/2, height/2)]
+        # Allows for body type to be specified as a constant/string
+        body_type = kwargs.get('body_type', pm.Body.DYNAMIC)
+        if isinstance(body_type, str):
+            body_type = getattr(pm.Body, body_type)
+        # Instantiate the body and shape
+        bdy = pm.Body(body_type=body_type)
+        bdy.position = (x, y)
+        bdy.angle = radians(rotation)
+        bdy.health = kwargs.get('health')
+        shape = pm.Poly(body=bdy, vertices=verts, radius=kwargs.get('radius', 0))
+        shape.mass = kwargs.get('mass', 1) 
+        shape.elasticity = kwargs.get('bounce', 0)  # No bounce
+        shape.friction = kwargs.get('friction', 0)  # Frictionless
+
+        # and add them to the display if relevant
+        if not (self._headless or self._disp_evt.is_set()):
+            msg = {'cmd': 'create',
+                   'data': {'shape_type': 'Box',
+                            'shape_id': bdy.id,
+                            'width': width,
+                            'height': height,
+                            'rotation': rotation,
+                            'x': x,
+                            'y': y,
+                            'color': (0, 255, 0)}}
+        return shape, msg
+
+    def create_shape(self, shape_type, **kwargs):
         match shape_type:
             case 'Circle':
-                # Create the required body and shape
-                bdy = pm.Body(kwargs.get('body_type', pm.Body.DYNAMIC))
-                bdy.position = (kwargs.get('x', 0), kwargs.get('y', 0))
-                shape = pm.shapes.Circle(body=bdy, radius=kwargs.get('radius', 10))
-                shape.mass = kwargs.get('mass', 1) 
-                shape.elasticity = kwargs.get('elasticity', 0)  # No bounce
-                shape.friction = kwargs.get('friction', 0)  # Frictionless
-                # and add them to the display if relevant
-                if not (self._headless or self._disp_evt.is_set()):
-                    msg = {'cmd': 'create',
-                           'data': {'shape_type': 'Circle',
-                                    'shape_id': bdy.id,
-                                    'x': bdy.position.x,
-                                    'y': bdy.position.y,
-                                    'radius': shape.radius,
-                                    'color': (255, 0, 0)}}
+                shape, msg = self._create_circle(**kwargs)
             case 'Segment':
-                # Compute the shape's features based on the given data
-                # This is required because pymunk and pyglet do not declare shapes in the same way
-                x = kwargs.get('x', 0) 
-                y = kwargs.get('y', 0)
-                width = kwargs.get('width', 10)
-                height = kwargs.get('height', 10)
-                rotation = kwargs.get('rotation', 0)
-                x1 = x - cos(radians(rotation)) * width / 2
-                x2 = x + cos(radians(rotation)) * width / 2
-                y1 = y - sin(radians(rotation)) * width / 2
-                y2 = y + sin(radians(rotation)) * width / 2
-
-                # Instantiate the body and shape
-                bdy = pm.Body(kwargs.get('body_type', pm.Body.DYNAMIC))
-                bdy.position = (x, y)
-                bdy.angle = radians(rotation)
-                shape = pm.shapes.Segment(body=bdy, a=(x1, y1), b=(x2, y2), radius=height)
-                shape.mass = kwargs.get('mass', 1) 
-                shape.elasticity = kwargs.get('elasticity', 0)  # No bounce
-                shape.friction = kwargs.get('friction', 0)  # Frictionless
-
-                # and add them to the display if relevant
-                if not (self._headless or self._disp_evt.is_set()):
-                    msg = {'cmd': 'create',
-                           'data': {'shape_type': 'Segment',
-                                    'shape_id': bdy.id,
-                                    'width': width,
-                                    'height': height,
-                                    'rotation': rotation,
-                                    'x': x,
-                                    'y': y,
-                                    'color': (0, 255, 0)}}
+                shape, msg = self._create_segment(**kwargs)
+            case 'Box':
+                shape, msg = self._create_box(**kwargs)
             case _:
                 raise NotImplementedError(f'Cannot create a shape of type: {shape_type}')
 
+        # Assign grouped filter to shape
+        # TODO: Allow to specify categories and masks
+        # TODO: Check if this is actually working or not
+        # TODO: Also be aware that shapes that are constrained together can still collide depending on the value of `collide_bodies` assigned to the joint
+        shape.filter = pm.ShapeFilter(group=kwargs.get('group', 0))
+
         # Add to the environment
-        self._env.add(bdy, shape)
+        self._env.add(shape.body, shape)
         
         # Keep track of mapping between pymunk ID and shapes
-        self._objs[bdy.id] = shape
+        self._objs[shape.body.id] = shape
         # As well as between given ID and pymunk ID
-        self._id_to_pm_id[kwargs.get('id', len(self._id_to_pm_id))] = bdy.id
+        self._id_to_pm_id[kwargs.get('id', len(self._id_to_pm_id))] = shape.body.id
 
         return msg
 
     def create_joint(self, joint_type, **kwargs):
         # Translate the IDs to pymunk IDs
-        pm_a = self._it_to_pm_id[kwargs['id_a']]
-        pm_b = self._it_to_pm_id[kwargs['id_b']]
+        pm_a = self._id_to_pm_id[kwargs['id_a']]
+        pm_b = self._id_to_pm_id[kwargs['id_b']]
 
         # Create required joint
         match joint_type:
-            case 'PinJoint':
-                j = pm.PinJoint(self._objs[pm_a].body,
+            case 'PivotJoint':
+                j = pm.PivotJoint(self._objs[pm_a].body,
                                 self._objs[pm_b].body,
-                                kwargs.get('anchor_a', (0, 0)),
-                                kwargs.get('anchor_b', (0, 0)))
+                                kwargs.get('pivot_point', (0, 0)))
+            case 'PinJoint':
+                j = pm.PinJoint(a=self._objs[pm_a].body,
+                                b=self._objs[pm_b].body,
+                                anchor_a=kwargs.get('anchor_a', (0, 0)),
+                                anchor_b=kwargs.get('anchor_b', (0, 0)))
+            case 'SlideJoint':
+                j = pm.SlideJoint(self._objs[pm_a].body,
+                                  self._objs[pm_b].body,
+                                  kwargs.get('anchor_a', (0, 0)),
+                                  kwargs.get('anchor_b', (0, 0)),
+                                  kwargs['min'],  # Makes `min` a requirement
+                                  kwargs['max'])  # Makes `max` a requirement
+            case 'GrooveJoint':
+                j = pm.GrooveJoint(self._objs[pm_a], self._objs[pm_b],
+                                   groove_a=kwargs.get('groove_a', (-5, 5)), groove_b=kwargs.get('groove_b', (5, 5)),
+                                   anchor_b=kwargs.get('anchor_b', (0, 0)))
             case _:
                 raise NotImplementedError(f'Cannot create a joint of type: {joint_type}')
 
+        j.collide_bodies = kwargs.get('collide_bodies', True)
         # Add to the environment
         self._env.add(j)
 
     def to_display(self):
-        return [(k, s.body.position.x, s.body.position.y, degrees(s.body.angle)) for k, s in self._objs.items() if s.body.body_type != pm.Body.STATIC]
+        objs = []
+        for k, s in self._objs.items():
+            if s.body.body_type != pm.Body.STATIC:
+                # TODO: Make sure `health` or the last value sent is in the interval [0, 255] since it will configure opacity
+                if s.body.health is None:
+                    opacity = 255
+                else:
+                    opacity = int(255 * s.body.health / 100)  # This is only an example
+                objs.append((k, s.body.position.x, s.body.position.y, degrees(s.body.angle), opacity))
+        return objs
+
+    def get_obj(self, obj_id):
+        """
+        Retrieves the object with id `obj_id` from the environment.
+
+        Parameters
+        ----------
+        obj_id: str | int
+            The ID given to the object in the configuration file.
+
+        Returns
+        -------
+        PyMunk.Shape
+            The shape corresponding to the given `obj_id` or None if nothing was found.
+        """
+
+        try:
+            pm_id = self._id_to_pm_id[obj_id]
+            return self._objs[pm_id]
+        except KeyError:
+            return None
 
     def reset(self):
         """
