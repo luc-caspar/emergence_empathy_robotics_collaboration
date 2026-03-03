@@ -40,7 +40,7 @@ class Display(Process):
         match shape_type:
             case "Circle":
                 self._shapes[shape_id] = pg.shapes.Circle(**kwargs)
-            case "Segment":
+            case "Segment" | "Box":
                 try:
                     rotation = kwargs['rotation']
                     del kwargs['rotation']
@@ -63,6 +63,8 @@ class Display(Process):
     def init_display(self):
         # Initialize the window
         self._win = pg.window.Window()
+        # The "clear" color used when calling `window.clear()`
+        pg.gl.glClearColor(1,1,1,1)
         # Let the window know how to draw things
         self._win.push_handlers(on_draw=self.on_draw, on_close=self.on_close)
 
@@ -76,7 +78,7 @@ class Display(Process):
             try:
                 msgs = self._q.get(timeout=1)
             except Empty:
-                # Nothing new, closing the window
+                # Nothing new, assume this is the end of the environment, closing the window
                 self._win.close()
                 return 
 
@@ -98,6 +100,8 @@ class Display(Process):
                                 self._shapes[obj[0]].x = obj[1]
                                 self._shapes[obj[0]].y = obj[2]
                                 self._shapes[obj[0]].rotation = obj[3]
+                                curr_color = self._shapes[obj[0]].color
+                                self._shapes[obj[0]].color = (*curr_color[0:3], obj[4])  # Use health to decrease opacity
                             except KeyError:
                                 print("This should not happen. Let's ignore it")
 
