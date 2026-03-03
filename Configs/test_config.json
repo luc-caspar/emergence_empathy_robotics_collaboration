@@ -1,0 +1,17 @@
+{
+	"gravity": [0, -9.81],
+	"objects": [
+		{"shape_type": "Segment",
+			"id": 0,
+			"mass": 3,
+			"x": 600,
+			"y": 600,
+			"width": 50,
+			"height": 10,
+			"rotation": 45,
+			"friction": 0,
+			"bounce": 1
+		}
+	],
+	"joints": []
+}
