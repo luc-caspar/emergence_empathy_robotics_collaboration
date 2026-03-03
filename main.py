@@ -48,8 +48,14 @@ if __name__ == "__main__":
             env.reset()
 
             # TODO: step through the environment for some time
-            for _ in range(FPS * 12):
+            for i in range(FPS * 12):
                 env.step()
+
+                # TMP: Apply an impulse to the segment
+                # This is only to test the PinJoint
+                # TODO: Why does the segment jump to the side on first application of local impulse?
+                seg = env.get_obj(0)
+                seg.body.apply_impulse_at_local_point(impulse=(0, 2))
 
                 # If relevant send information to the display
                 if not(args.headless or disp_evt.is_set()):
