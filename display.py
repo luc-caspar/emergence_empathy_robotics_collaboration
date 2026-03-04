@@ -49,6 +49,18 @@ class Display(Process):
                 self._shapes[shape_id] = pg.shapes.Rectangle(**kwargs)
                 self._shapes[shape_id].anchor_position = (kwargs['width'] / 2, kwargs['height'] / 2)
                 self._shapes[shape_id].rotation = rotation
+            case "Poly":
+                try:
+                    rotation = kwargs['rotation']
+                    del kwargs['rotation']
+                except KeyError:
+                    rotation = 0
+                self._shapes[shape_id] = pg.shapes.Polygon(**kwargs)
+                # TODO: Where is the anchor position for this shape?
+                # TODO: Display anchor position with a circle for debugging purposes
+                self._shapes[shape_id].position = (kwargs.get('x', 0), kwargs.get('y', 0))
+                self._shapes[shape_id].rotation = rotation
+                
             case _:
                 self._evt.set()
                 raise NotImplementedError(f'Cannot create a shape of type: {shape_type}')

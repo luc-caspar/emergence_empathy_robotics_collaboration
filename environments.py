@@ -120,6 +120,39 @@ class Environment:
                             'color': (0, 255, 0)}}
         return shape, msg
 
+    def _create_poly(self, **kwargs):
+        msg = {}
+        # Extract position and rotation
+        x = kwargs.get('x', 0) 
+        y = kwargs.get('y', 0)
+        rotation = kwargs.get('rotation', 0)
+        # Extract the list of vertices that make up the polynomial shape
+        verts = kwargs.get('vertices', [])
+        # Allows for body type to be specified as a constant/string
+        body_type = kwargs.get('body_type', pm.Body.DYNAMIC)
+        if isinstance(body_type, str):
+            body_type = getattr(pm.Body, body_type)
+        # Instantiate the body and shape
+        bdy = pm.Body(body_type=body_type)
+        bdy.position = (x, y)
+        bdy.angle = radians(rotation)
+        bdy.health = kwargs.get('health')
+        shape = pm.Poly(body=bdy, vertices=verts, radius=kwargs.get('radius', 0))
+        shape.mass = kwargs.get('mass', 1) 
+        shape.elasticity = kwargs.get('bounce', 0)  # No bounce
+        shape.friction = kwargs.get('friction', 0)  # Frictionless
+
+        # and add them to the display if relevant
+        if not (self._headless or self._disp_evt.is_set()):
+            msg = {'cmd': 'create',
+                   'data': {'shape_type': 'Poly',
+                            'shape_id': bdy.id,
+                            'coordinates': verts,
+                            'rotation': rotation,
+                            'x': x,
+                            'y': y,
+                            'color': (0, 255, 0)}}
+
     def create_shape(self, shape_type, **kwargs):
         match shape_type:
             case 'Circle':
