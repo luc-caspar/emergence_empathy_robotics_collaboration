@@ -16,15 +16,6 @@ class PushTask:
     """
 
     def __init__(self, config_path, headless=True):
-        # Check if rendering is required
-        self._headless = headless
-        if not headless:
-            self._disp_q = Queue()
-            self._disp_evt = Event()
-            self._disp = Display(self._disp_q, self._disp_evt, FPS)
-        else:
-            self._disp_q = None
-            self._disp_evt = None
 
         # Load the configuration
         if isinstance(config_path, str):
@@ -37,10 +28,22 @@ class PushTask:
         with config_path.open('r') as f:
             self._config = json.load(f)
 
-        # Instantiate the environment
+        # Get the environment's configuration
         env_config = self._config.get('environment')
         if env_config is None:
             raise RuntimeError("No environment configuration provided.")
+
+        # Check if rendering is required
+        self._headless = headless
+        if not headless:
+            self._disp_q = Queue()
+            self._disp_evt = Event()
+            self._disp = Display(self._disp_q, self._disp_evt, FPS, env_config.get('width', 100), env_config.get('height', 100))
+        else:
+            self._disp_q = None
+            self._disp_evt = None
+
+        # Instantiate the environment
         self._env = Environment(env_config, self._disp_q, self._disp_evt)
 
         # Instantiate all agents

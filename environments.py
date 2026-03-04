@@ -15,6 +15,9 @@ class Environment:
         self._id_to_pm_id = {}
         self._objs = {}
 
+        self._width = config.get('width', 100)
+        self._height = height.get('height', 100)
+
     def _create_segment(self, **kwargs):
         # Compute the shape's features based on the given data
         # This is required because pymunk and pyglet do not declare shapes in the same way

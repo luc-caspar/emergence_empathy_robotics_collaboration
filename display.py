@@ -6,7 +6,7 @@ import pyglet as pg
 
 class Display(Process):
     
-    def __init__(self, q, evt, fps):
+    def __init__(self, q, evt, fps, width=100, height=100):
         """
         Parameters:
         -----------
@@ -27,6 +27,8 @@ class Display(Process):
         self._batch = None
         self._shapes = {}
         self._fps = fps
+        self._width = width
+        self._height = height
 
         # Used for communication between the environment and display
         self._q = q
@@ -74,7 +76,7 @@ class Display(Process):
 
     def init_display(self):
         # Initialize the window
-        self._win = pg.window.Window()
+        self._win = pg.window.Window(width=self._width, height=self._height)
         # The "clear" color used when calling `window.clear()`
         pg.gl.glClearColor(1,1,1,1)
         # Let the window know how to draw things

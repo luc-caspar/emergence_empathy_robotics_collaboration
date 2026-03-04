@@ -34,7 +34,7 @@ if __name__ == "__main__":
         if not args.headless:
             disp_q = Queue()
             disp_evt = Event()
-            display = Display(disp_q, disp_evt, FPS)
+            display = Display(disp_q, disp_evt, FPS, config.get('width', 100), config.get('height', 100))
             display.start()
         else:
             disp_q = None
