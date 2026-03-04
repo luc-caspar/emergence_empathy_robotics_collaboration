@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
             # TODO: step through the environment for some time
             for i in range(FPS * 12):
-                env.step()
+                env.step(1 / FPS)
 
                 # TMP: Apply an impulse to the segment
                 # This is only to test the PinJoint
