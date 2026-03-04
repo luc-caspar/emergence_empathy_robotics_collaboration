@@ -83,7 +83,6 @@ class Display(Process):
         # Initialize a batch
         self._batch = pg.graphics.Batch()
 
-
     def on_draw(self):
         if not self._win.has_exit:
             # Get the data to display next
