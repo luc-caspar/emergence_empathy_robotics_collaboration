@@ -4,7 +4,7 @@ from math import sin, cos, radians, degrees
 
 
 class Environment:
-    def __init__(self, config, fps, disp_q=None, disp_evt=None):
+    def __init__(self, config, disp_q=None, disp_evt=None):
         self._env = None
         self._config = config
 
@@ -14,8 +14,6 @@ class Environment:
 
         self._id_to_pm_id = {}
         self._objs = {}
-
-        self._fps = fps
 
     def _create_segment(self, **kwargs):
         # Compute the shape's features based on the given data
@@ -276,8 +274,22 @@ class Environment:
         for joint in self._config.get('joints', []):
             self.create_joint(**joint)
 
-    def step(self):
-        self._env.step(1/self._fps)
+    def step(self, intval, acts):
+        """
+        Apply the agents' actions, and move the simulation forward.
+
+        Parameters
+        ----------
+        intval: float
+            The amount of time (in seconds) by which to move the simulation forward
+
+        acts: dict
+            A dictionary containing the action to apply for each agent (i.e.: `{"agt_id": act, ... }`
+
+        """
+        # TODO: apply agent actions first
+
+        self._env.step(intval)
 
     def observe(self):
         # TODO: return observation, reward, and termination/end
