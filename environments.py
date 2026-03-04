@@ -153,6 +153,8 @@ class Environment:
                             'y': y,
                             'color': (0, 255, 0)}}
 
+        return shape, msg
+
     def create_shape(self, shape_type, **kwargs):
         match shape_type:
             case 'Circle':
@@ -161,6 +163,8 @@ class Environment:
                 shape, msg = self._create_segment(**kwargs)
             case 'Box':
                 shape, msg = self._create_box(**kwargs)
+            case 'Poly':
+                shape, msg = self._create_poly(**kwargs)
             case _:
                 raise NotImplementedError(f'Cannot create a shape of type: {shape_type}')
 
