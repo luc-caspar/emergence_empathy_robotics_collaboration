@@ -3,10 +3,9 @@ from argparse import ArgumentParser
 from pathlib import Path
 import json
 from multiprocessing import Queue, Event
-from environments import Environment
+from environments import PushEnv
 from display import Display
 from agent import Agent
-from settings import FPS
 
 
 class PushTask:
@@ -40,13 +39,13 @@ class PushTask:
         if not headless:
             self._disp_q = Queue()
             self._disp_evt = Event()
-            self._disp = Display(self._disp_q, self._disp_evt, FPS, env_config.get('width', 100), env_config.get('height', 100))
+            self._disp = Display(self._disp_q, self._disp_evt, self._fps, env_config.get('width', 100), env_config.get('height', 100))
         else:
             self._disp_q = None
             self._disp_evt = None
 
         # Instantiate the environment
-        self._env = Environment(env_config, self._disp_q, self._disp_evt)
+        self._env = PushEnv(env_config, self._disp_q, self._disp_evt)
 
         # Instantiate all agents
         # While still allowing to run empty environments
