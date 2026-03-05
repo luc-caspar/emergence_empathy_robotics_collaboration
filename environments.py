@@ -156,8 +156,8 @@ class Environment:
 
         return shape, msg
 
-    def create_shape(self, shape_type, **kwargs):
-        match shape_type:
+    def _create_shape(self, shape_type, **kwargs):
+        match shape_type.capitalize():
             case 'Circle':
                 shape, msg = self._create_circle(**kwargs)
             case 'Segment':
@@ -187,7 +187,7 @@ class Environment:
 
         return msg
 
-    def create_joint(self, joint_type, **kwargs):
+    def _create_joint(self, joint_type, **kwargs):
         # Translate the IDs to pymunk IDs
         pm_a = self._id_to_pm_id[kwargs['id_a']]
         pm_b = self._id_to_pm_id[kwargs['id_b']]
@@ -271,13 +271,16 @@ class Environment:
         self._objs = {}
 
         # Create and configure all initial objects
-        msgs = [self.create_shape(**obj) for obj in self._config.get('objects', [])]
+        msgs = [self._create_shape(**obj) for obj in self._config.get('objects', [])]
         if not (self._headless or self._disp_evt.is_set()):
             self._disp_q.put(msgs)
 
         # Create and configure all initial joints
         for joint in self._config.get('joints', []):
-            self.create_joint(**joint)
+            self._create_joint(**joint)
+
+        # Reindex any static shapes after movement
+        self._env.reindex_static()
 
     def step(self, intval, acts):
         """
