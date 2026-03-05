@@ -16,7 +16,7 @@ class Environment:
         self._objs = {}
 
         self._width = config.get('width', 100)
-        self._height = height.get('height', 100)
+        self._height = config.get('height', 100)
 
     def _create_segment(self, **kwargs):
         # Compute the shape's features based on the given data
