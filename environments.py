@@ -312,7 +312,24 @@ class PushEnv(Environment):
         # Execute the parent's method first
         super().reset()
 
-        # Modify the objects' categories and masks to allow pushables to go through outer walls, but not agents
+        # TODO: Modify the objects' categories and masks to allow pushables to go through outer walls, but not agents
+        filt = pm.ShapeFilter(categories=0b00001, mask=0b01000)
+        for w in ['wall_L', 'wall_T', 'wall_R', 'wall_B']:
+            self._objs[self._id_to_pm_id[w]].filter = filt
+
+        filt = pm.ShapeFilter(categories=0b00010, mask=0b00100 | 0b01000)
+        for o in ['obs_H', 'obs_V']:
+            self._objs[self._id_to_pm_id[o]].filter = filt
+
+        self._objs[self._id_to_pm_id['pushable']].filter = pm.ShapeFilter(categories=0b00100, mask=0b00010 | 0b01000)
+
+        filt = pm.ShapeFilter(categories=0b01000, mask=pm.ShapeFilter.ALL_MASKS() ^ 0b10000)
+        for a in ['agt_1', 'agt_2']:
+            self._objs[self._id_to_pm_id[a]].filter = filt
+
+        self._objs[self._id_to_pm_id['goal']].filter = pm.ShapeFilter(categories=0b10000)
+
+        # TODO: Set random initial position for pushable and agents
 
     def observe(self):
         # TODO: Observe the new state, define the reward, and check if the task has been completed
