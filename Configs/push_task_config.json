@@ -1,0 +1,46 @@
+{
+	"fps": 60,
+	"max_steps": 1000,
+	"environment": {
+		"gravity": [0, -9.81],
+		"width": 1000,
+		"height": 1000,
+		"objects": [
+			{"shape_type": "Box",
+				"body_type": "DYNAMIC",
+				"id": 0,
+				"mass": 10,
+				"x": 600,
+				"y": 600,
+				"radius": 1,
+				"width": 50,
+				"height": 50,
+				"rotation": 45,
+				"friction": 0,
+				"bounce": 0,
+				"group": 0
+			},
+			{"shape_type": "Circle",
+				"id": 1,
+				"mass": 3,
+				"x": 600,
+				"y": 675,
+				"radius": 50,
+				"rotation": 0,
+				"friction": 0,
+				"bounce": 0,
+				"group": 0
+			}
+		],
+		"joints": [
+			{
+				"joint_type": "PivotJoint",
+				"id_a": 0,
+				"id_b": 1,
+				"pivot_point": [600, 625],
+				"collide_bodies": true
+			}
+		]
+	},
+	"agents": []
+}
