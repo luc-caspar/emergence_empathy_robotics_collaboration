@@ -56,7 +56,7 @@ class Environment:
                             'rotation': rotation,
                             'x': x,
                             'y': y,
-                            'color': (0, 255, 0)}}
+                            'color': kwargs.get('color', (128, 128, 128))}}
         return shape, msg
 
     def _create_circle(self, **kwargs):
@@ -81,7 +81,7 @@ class Environment:
                             'x': bdy.position.x,
                             'y': bdy.position.y,
                             'radius': shape.radius,
-                            'color': (255, 0, 0)}}
+                            'color': kwargs.get('color', (255, 0, 0))}}
         return shape, msg
 
     def _create_box(self, **kwargs):
@@ -118,7 +118,7 @@ class Environment:
                             'rotation': rotation,
                             'x': x,
                             'y': y,
-                            'color': (0, 255, 0)}}
+                            'color': kwargs.get('color', (0, 255, 0))}}
         return shape, msg
 
     def _create_poly(self, **kwargs):
@@ -152,7 +152,7 @@ class Environment:
                             'rotation': rotation,
                             'x': x,
                             'y': y,
-                            'color': (0, 255, 0)}}
+                            'color': kwargs.get('color', (0, 255, 0))}}
 
         return shape, msg
 
