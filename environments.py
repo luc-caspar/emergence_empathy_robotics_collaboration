@@ -295,5 +295,21 @@ class Environment:
         self._env.step(intval)
 
     def observe(self):
-        # TODO: return observation, reward, and termination/end
-        pass
+        raise NotImplementedError("Please implement your own environment and define its observation function.")
+
+
+class PushEnv(Environment):
+    """
+    Defines a maze-like environment with a static goal for the Push task.
+    """
+
+    def reset(self):
+        # Execute the parent's method first
+        super().reset()
+
+        # Modify the objects' categories and masks to allow pushables to go through outer walls, but not agents
+
+    def observe(self):
+        # TODO: Observe the new state, define the reward, and check if the task has been completed
+        return None, None, False
+
