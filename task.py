@@ -66,7 +66,7 @@ class PushTask:
             agt.reset()
 
         # Reset thet environment
-        elf._env.reset()
+        self._env.reset()
 
     def save(self):
         """
@@ -119,7 +119,7 @@ if __name__ == "__main__":
                         dest='config',
                         type=Path,
                         required=True,
-                        help='The relative path to the configuration file for the task.')
+                        help='The relative path to the task configuration file.')
     parser.add_argument('--headless',
                         dest='headless',
                         action='store_true',
@@ -129,7 +129,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Instantiate the task
-    task = Task(config_path=args.config, headless=args.headless)
+    task = PushTask(config_path=args.config, headless=args.headless)
+
+    # Reset the task
+    task.reset()
 
     # Run the task
     task.run()
