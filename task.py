@@ -16,7 +16,6 @@ class PushTask:
     """
 
     def __init__(self, config_path, headless=True):
-
         # Load the configuration
         if isinstance(config_path, str):
             config_path = Path(config_path)
@@ -47,10 +46,12 @@ class PushTask:
         self._env = Environment(env_config, self._disp_q, self._disp_evt)
 
         # Instantiate all agents
+        # While still allowing to run empty environments
         agts_config = self._config.get('agents', [])
-        if len(agts_config) == 0:
-            raise RuntimeError("No agent configuration provided.")
-        self._agts = [Agent(cfg) for cfg in agt_configs]
+        if len(agts_config) > 0:
+            self._agts = [Agent(cfg) for cfg in agt_configs]
+        else:
+            self._agts = []
 
     def reset(self):
         """
