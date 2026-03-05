@@ -4,7 +4,6 @@ import pymunk as pm
 import pyglet as pg
 from multiprocessing import Process, Event, Queue
 from queue import Empty
-from settings import FPS
 
 
 # /!\ Pyglet coordinate system originates in the lower-left corner
@@ -116,7 +115,7 @@ class Display(Process):
 
         try:
             # Run the loop forever
-            pg.app.run(interval=1/FPS)
+            pg.app.run(interval=1/30)
         except RuntimeError:
             if not self._evt.is_set():
                 self._evt.set()
@@ -170,7 +169,7 @@ if __name__ == "__main__":
         # Let the world evolve
         cnt = 0
         while ball.body.position.y - ball.radius > 0:  # /!\ Do not stop the simulation if the display closes
-            env.step(1 / FPS)
+            env.step(1 / 30)
 
             # Do not queue data if the display does not exist
             if not (args.headless or end_evt.is_set()):
