@@ -8,6 +8,9 @@ from display import Display
 from agent import Agent
 
 
+# TODO: Define an Action object as a NamedTuple
+
+
 class PushTask:
     """
     Defines a multi-agent push task, where the goal is to bring an object to a
@@ -83,12 +86,15 @@ class PushTask:
         try:
             end = False
             cnt = 0
+            pushable = self._env.get_obj('pushable')
             while not end and cnt <= self._max_steps:
                 # Observe the environment
                 obs, rew, end = self._env.observe()
 
                 # Let the agents decide on their next action
                 acts = [agt.act(obs, rew, end) for agt in self._agts]
+
+                pushable.body.apply_impulse_at_local_point(impulse=(-10, 0), point=(0, 0))
 
                 # Move the environment forward
                 self._env.step(1/self._fps, acts)
