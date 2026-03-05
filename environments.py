@@ -173,7 +173,9 @@ class Environment:
         # TODO: Allow to specify categories and masks
         # TODO: Check if this is actually working or not
         # TODO: Also be aware that shapes that are constrained together can still collide depending on the value of `collide_bodies` assigned to the joint
-        shape.filter = pm.ShapeFilter(group=kwargs.get('group', 0))
+        grp = kwargs.get('group')
+        if grp is not None:
+            shape.filter = pm.ShapeFilter(group=grp)
 
         # Add to the environment
         self._env.add(shape.body, shape)
