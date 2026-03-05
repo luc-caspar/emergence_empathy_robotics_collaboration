@@ -27,6 +27,9 @@ class PushTask:
         with config_path.open('r') as f:
             self._config = json.load(f)
 
+        self._max_steps = self._config.get('max_steps', 1)
+        self._fps = self._config.get('fps', 30)
+
         # Get the environment's configuration
         env_config = self._config.get('environment')
         if env_config is None:
@@ -81,7 +84,7 @@ class PushTask:
         try:
             end = False
             cnt = 0
-            while not end and cnt <= self._config.get('max_steps', 1):
+            while not end and cnt <= self._max_steps:
                 # Observe the environment
                 obs, rew, end = self._env.observe()
 
@@ -89,7 +92,7 @@ class PushTask:
                 acts = [agt.act(obs, rew, end) for agt in self._agts]
 
                 # Move the environment forward
-                self._env.step(1/FPS, acts)
+                self._env.step(1/self._fps, acts)
 
                 # If relevant display new environment's state
                 if not(self._headless or self._disp_evt.is_set()):
